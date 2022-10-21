@@ -1,4 +1,5 @@
 defmodule ProtobufGenerate.Protoc do
+  @moduledoc false
   # https://github.com/ahamez/protox/blob/master/lib/protox/protoc.ex
   def run(_files = [proto_file], _imports = []),
     do: run_protoc([proto_file], ["-I", "#{proto_file |> Path.dirname() |> Path.expand()}"])

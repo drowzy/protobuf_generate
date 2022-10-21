@@ -30,6 +30,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
         --include-path=deps/googleapis \
         --generate-descriptors=true \
         --output-path=./lib \
+        --plugins=ProtobufGenerate.Plugins.GRPC
         google/api/annotations.proto google/api/http.proto helloworld.proto
 
   """
@@ -37,7 +38,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
   use Mix.Task
 
-  alias ProtobufGenerate.{Protoc, CodeGen}
+  alias ProtobufGenerate.{Protoc, CodeGen, Plugin}
   alias Protobuf.Protoc.Context
 
   @switches [
@@ -112,7 +113,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
         ProtobufGenerate.Plugins.Enum,
         ProtobufGenerate.Plugins.Extension,
         ProtobufGenerate.Plugins.Message
-      ] ++ if "grpc" in ctx.plugins, do: [ProtobufGenerate.Plugins.GRPC], else: []
+      ] ++ Plugin.load(ctx.plugins)
 
     files =
       Enum.flat_map(request.file_to_generate, fn file ->
@@ -135,6 +136,20 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
     File.mkdir_p!(dir)
     File.write!(path, content)
+  end
+
+  defp load_plugins([]), do: []
+
+  defp load_plugins(plugins) do
+    for plugin <- plugins do
+      case Code.ensure_loaded(String.to_atom(plugin)) do
+        {:module, mod} ->
+          mod
+
+        {:error, reason} ->
+          Mix.raise("error loading plugin: #{inspect(plugin)} error: #{inspect(reason)}")
+      end
+    end
   end
 
   defp pop_values(opts, key) do

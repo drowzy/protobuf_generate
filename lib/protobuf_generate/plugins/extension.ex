@@ -1,4 +1,5 @@
 defmodule ProtobufGenerate.Plugins.Extension do
+  # ref: https://github.com/elixir-protobuf/protobuf/blob/main/lib/protobuf/protoc/generator/extension.ex
   @moduledoc false
 
   @behaviour ProtobufGenerate.Plugin

@@ -106,10 +106,6 @@ defmodule ProtobufGenerate.Plugin do
         end
       end
 
-
-  The `ProtobufGenerate.Plugin` module provides a number of functions to make implementing generators easier.
-
-  **TODO**
   """
 
   @type template_assigns :: {String.t(), keyword()}
@@ -121,4 +117,18 @@ defmodule ProtobufGenerate.Plugin do
 
   @callback template() :: String.t()
   @callback generate(Protobuf.Protoc.Context.t(), Google.Protobuf.FileDescriptorProto) :: state()
+
+  def load([]), do: []
+
+  def load(plugins) do
+    for plugin <- plugins do
+      case Code.ensure_loaded(Module.concat([plugin])) do
+        {:module, mod} ->
+          mod
+
+        {:error, reason} ->
+          Mix.raise("error loading plugin: #{inspect(plugin)} error: #{inspect(reason)}")
+      end
+    end
+  end
 end

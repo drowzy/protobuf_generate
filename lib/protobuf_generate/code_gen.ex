@@ -1,4 +1,5 @@
 defmodule ProtobufGenerate.CodeGen do
+  @moduledoc false
   require EEx
 
   alias Protobuf.Protoc.Context
@@ -23,44 +24,22 @@ defmodule ProtobufGenerate.CodeGen do
         |> eval(template)
       end
 
-    module_definitions = List.flatten(module_definitions)
-
-    if ctx.one_file_per_module? do
-      for {mod_name, content} <- module_definitions do
-        file_name = Macro.underscore(mod_name) <> ".pb.ex"
-
-        Google.Protobuf.Compiler.CodeGeneratorResponse.File.new(
-          name: file_name,
-          content: content
-        )
-      end
-    else
-      # desc.name is the filename, ending in ".proto".
-      file_name = Path.rootname(desc.name) <> ".pb.ex"
-
-      content =
-        module_definitions
-        |> Enum.map(fn {_mod_name, contents} -> [contents, ?\n] end)
-        |> IO.iodata_to_binary()
-        |> Util.format()
-
-      [
-        Google.Protobuf.Compiler.CodeGeneratorResponse.File.new(
-          name: file_name,
-          content: content
-        )
-      ]
-    end
+    module_definitions
+    |> List.flatten()
+    |> generate_files(desc, ctx.one_file_per_module?)
   end
 
-  @spec eval([{String.t(), keyword() | {atom(), {String.t(), keyword()}}}], binary()) ::
-          [{binary(), binary()}] | {binary(), binary()}
   def eval(msgs, template) when is_list(msgs) do
     for msg <- msgs, do: eval(msg, template)
   end
 
   def eval({mod_name, assigns}, template) when is_binary(mod_name) do
-    {mod_name, EEx.eval_string(template, assigns: assigns)}
+    content =
+      template
+      |> EEx.eval_string(assigns: assigns)
+      |> Util.format()
+
+    {mod_name, content}
   end
 
   def eval({plugin, {_mod_name, _assigns} = msg}, _template) when is_atom(plugin) do
@@ -71,7 +50,35 @@ defmodule ProtobufGenerate.CodeGen do
     eval(msg, plugin.template(%{}))
   end
 
-  defp get_dep_type_mapping(%Context{global_type_mapping: global_mapping}, deps, file_name) do
+  defp generate_files(module_definitions, _desc, _file_per_module = true) do
+    for {mod_name, content} <- module_definitions do
+      file_name = Macro.underscore(mod_name) <> ".pb.ex"
+
+      Google.Protobuf.Compiler.CodeGeneratorResponse.File.new(
+        name: file_name,
+        content: content
+      )
+    end
+  end
+
+  defp generate_files(module_definitions, desc, _file_per_module = false) do
+    file_name = Path.rootname(desc.name) <> ".pb.ex"
+
+    content =
+      module_definitions
+      |> Enum.map(fn {_mod_name, contents} -> [contents, ?\n] end)
+      |> IO.iodata_to_binary()
+      |> Util.format()
+
+    [
+      Google.Protobuf.Compiler.CodeGeneratorResponse.File.new(
+        name: file_name,
+        content: content
+      )
+    ]
+  end
+
+  defp get_dep_type_mapping(%{global_type_mapping: global_mapping}, deps, file_name) do
     mapping =
       Enum.reduce(deps, %{}, fn dep, acc ->
         Map.merge(acc, global_mapping[dep])
@@ -81,6 +88,5 @@ defmodule ProtobufGenerate.CodeGen do
   end
 
   defp syntax("proto3"), do: :proto3
-  defp syntax("proto2"), do: :proto2
-  defp syntax(nil), do: :proto2
+  defp syntax(_), do: :proto2
 end

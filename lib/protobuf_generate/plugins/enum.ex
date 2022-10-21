@@ -1,4 +1,5 @@
 defmodule ProtobufGenerate.Plugins.Enum do
+  # ref: https://github.com/elixir-protobuf/protobuf/blob/main/lib/protobuf/protoc/generator/enum.ex
   @moduledoc false
   @behaviour ProtobufGenerate.Plugin
 
