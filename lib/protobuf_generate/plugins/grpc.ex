@@ -3,12 +3,8 @@ defmodule ProtobufGenerate.Plugins.GRPC do
 
   alias Protobuf.Protoc.Generator.Util
 
-  def init(_) do
-    %{}
-  end
-
   @impl true
-  def template(_) do
+  def template do
     """
     defmodule <%= @module %>.Service do
       @moduledoc false

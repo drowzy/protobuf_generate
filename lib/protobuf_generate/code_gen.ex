@@ -16,7 +16,7 @@ defmodule ProtobufGenerate.CodeGen do
 
     module_definitions =
       for plugin <- plugins do
-        template = plugin.template(%{})
+        template = plugin.template()
 
         ctx
         |> plugin.generate(desc)

@@ -9,7 +9,7 @@ defmodule ProtobufGenerate.Plugins.Extension do
   @ext_postfix "PbExtension"
 
   @impl true
-  def template(_) do
+  def template do
     """
     defmodule <%= @module %> do
       @moduledoc false

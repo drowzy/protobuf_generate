@@ -6,7 +6,7 @@ defmodule ProtobufGenerate.Plugins.Enum do
   alias Protobuf.Protoc.Generator.Util
 
   @impl true
-  def template(_) do
+  def template do
     """
     defmodule <%= @module %> do
       @moduledoc false
