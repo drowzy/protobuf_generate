@@ -1,5 +1,7 @@
 defmodule ProtobufGenerate.Plugins.Message do
   # ref: https://github.com/elixir-protobuf/protobuf/blob/main/lib/protobuf/protoc/generator/message.ex
+  @moduledoc false
+
   require EEx
   @behaviour ProtobufGenerate.Plugin
 

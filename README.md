@@ -8,7 +8,7 @@ _global_ context while `protobuf.generate` executes in the context of the _local
 
 By executing in the context of the local project:
 
-* Extensions that needs to be populated during code generation are picked up automatically by `Protobuf.load_extensions/1` (which is not possible when using `protoc-gen-elixir`).
+* Extensions that needs to be populated during code generation are picked up automatically by `Protobuf.load_extensions/0` (which is not possible when using `protoc-gen-elixir`).
 
 * Integration into the codegen by using generator plugins. See `ProtobufGenerate.Plugin`
 
