@@ -163,6 +163,51 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
     assert Map.fetch!(mod.__message_props__().field_props, 1).type == Google.Protobuf.Timestamp
   end
 
+  test "with grpc plugin", %{tmp_dir: tmp_dir} do
+    proto_path = Path.join(tmp_dir, "helloworld.proto")
+
+    File.write!(proto_path, """
+    syntax = "proto3";
+
+    import "google/protobuf/timestamp.proto";
+
+    package helloworld;
+
+    service Greeter {
+      rpc SayHello (HelloRequest) returns (HelloReply) {}
+      rpc SayHelloFrom (HelloRequestFrom) returns (HelloReply) {}
+    }
+
+    message HelloRequest {
+      string name = 1;
+    }
+
+    message HelloRequestFrom {
+      string name = 1;
+      string from = 2;
+    }
+
+    message HelloReply {
+      string message = 1;
+      google.protobuf.Timestamp today = 2;
+    }
+    """)
+
+    run([
+      "--include-path=#{tmp_dir}",
+      "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
+      "--output-path=#{tmp_dir}",
+      "--plugins=grpc",
+      proto_path
+    ])
+
+    assert [_, _, _, service] =
+             compile_file_and_clean_modules_on_exit("#{tmp_dir}/helloworld.pb.ex")
+
+    assert service == Helloworld.Greeter.Service
+    assert [{:SayHello, _, _, _}, {:SayHelloFrom, _, _, _}] = service.__rpc_calls__()
+  end
+
   defp compile_file_and_clean_modules_on_exit(path) do
     modules =
       path
