@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
   use Mix.Task
 
-  alias ProtobufGenerate.Protoc
+  alias ProtobufGenerate.{Protoc, CodeGen}
   alias Protobuf.Protoc.Context
 
   @switches [
@@ -107,10 +107,17 @@ defmodule Mix.Tasks.Protobuf.Generate do
   defp generate(ctx, request) do
     ctx = Protobuf.Protoc.CLI.find_types(ctx, request.proto_file, request.file_to_generate)
 
+    plugins =
+      [
+        ProtobufGenerate.Plugins.Enum,
+        ProtobufGenerate.Plugins.Extension,
+        ProtobufGenerate.Plugins.Message
+      ] ++ if "grpc" in ctx.plugins, do: [ProtobufGenerate.Plugins.GRPC], else: []
+
     files =
       Enum.flat_map(request.file_to_generate, fn file ->
         desc = Enum.find(request.proto_file, &(&1.name == file))
-        Protobuf.Protoc.Generator.generate(ctx, desc)
+        CodeGen.generate(ctx, desc, plugins)
       end)
 
     response =
