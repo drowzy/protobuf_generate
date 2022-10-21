@@ -1,11 +1,16 @@
 # Protobuf.Generate
 
-`protobuf_generate` is a mix task that allows you to call `protoc` without the need of a global installed plugin.
+`protobuf.generate` is a mix task that allows you to call `protoc` without the need of a global installed plugin.
+The generator calls `protoc` using `descriptor_set_out` to output a `FileDescriptorSet` into a temporary file and used as input to [Protobuf](https://github.com/elixir-protobuf/protobuf) for decoding / generating elixir modules.
 
+The difference between `protobuf.generate` and `protoc-gen-elixir` is that `protoc-gen-elixir` is called as a plugin to `protoc` so it executes in a 
+_global_ context while `protobuf.generate` executes in the context of the _local_ project. 
 
-The difference between `protobuf.generate` and `protoc-gen-elixir` is that `protoc-gen-elixir` is called as a plugin to `protoc`. `protoc-gen-elixir` executes in a global context while `protobuf.generate` executes in the context of the _local_ project.
+By executing in the context of the local project:
 
-`proto_gen` uses `protoc` ability to output `FileDescriptorSet` into a temporary file which is then decoded using [Protobuf](https://github.com/elixir-protobuf/protobuf). It provides the same abilities as `protoc-gen-elixir` but instead of being called by `protoc`, `protobuf.generate` _calls_ `protoc` which allows for features such as extensions being properly loaded.
+* Extensions that needs to be populated during code generation are picked up automatically by `Protobuf.load_extensions/1` (which is not possible when using `protoc-gen-elixir`).
+
+* Integration into the codegen by using generator plugins. See `ProtobufGenerate.Plugin`
 
 ## Prerequisites
 
@@ -38,11 +43,17 @@ end
 ### Optional options
 
   * `--include-path` - Specify the directory in which to search for imports. Eqvivalent to `protoc` `-I` flag.
+
   * `--tranform-module` - Module to do custom encoding/decoding for messages. See `Protobuf.TransformModule` for details.
+
   * `--package-prefix` - Prefix generated Elixir modules. For example prefix modules with: `MyApp.Protos` use `--package-prefix=my_app.protos`.
+
   * `--generate-descriptors` - Includes raw descriptors in the generated modules
+
   * `--one-file-per-module` - Changes the way files are generated into directories. This option creates a file for each generated Elixir module.
+
   * `--include-documentation` - Controls visibility of documentation of the generated modules. Setting `true` will not  have `@moduleoc false`
+
   * `--plugins` - If you write services in protobuf, you can generate gRPC code by passing `--plugins=grpc`.
 
 
@@ -59,14 +70,4 @@ $ mix protobuf.generate \
 
 ## Extensions
 
-Extensions in the current project loaded automatically when running `mix protobuf.generate`. However they need to be already generated in order for `protobuf` to pick them up.
-
-**TODO**
-
-## Features
-
-* Extensions in the current project are picked up automatically by `Protobuf.load_extensions()` (or can be provided as an argument to `protobuf.generate`).
-
-* Allows integration into the codegen by using generator plugins. See `lib/generators/grpc.ex`
-
-
+Extensions in the current project loaded automatically when running `mix protobuf.generate`. However they need to be already generated in order for `Protobuf.load_extensions/0` to pick them up.
