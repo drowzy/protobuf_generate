@@ -5,7 +5,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
   ## Arguments
 
-  * `FILE` - One or more `.proto` files to compile
+  * `file` - One or more `.proto` files to compile
 
   ## Required options
 

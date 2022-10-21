@@ -1,16 +1,19 @@
-# Protobuf.Generators
+# Protobuf.Generate
 
-`proto_gen` is a mix task that allows you to call `protoc` without the need of a global installed plugin.
+`protobuf_generate` is a mix task that allows you to call `protoc` without the need of a global installed plugin.
 
 
 The difference between `protobuf.generate` and `protoc-gen-elixir` is that `protoc-gen-elixir` is called as a plugin to `protoc`. `protoc-gen-elixir` executes in a global context while `protobuf.generate` executes in the context of the _local_ project.
 
 `proto_gen` uses `protoc` ability to output `FileDescriptorSet` into a temporary file which is then decoded using [Protobuf](https://github.com/elixir-protobuf/protobuf). It provides the same abilities as `protoc-gen-elixir` but instead of being called by `protoc`, `protobuf.generate` _calls_ `protoc` which allows for features such as extensions being properly loaded.
 
+## Prerequisites
+
+* [Protoc](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) (protocol buffer compiler) is required to be installed. [Download and install](https://grpc.io/docs/protoc-installation/) the protocol buffer compiler (protoc).
+
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `proto_gen` to your list of dependencies in `mix.exs`:
+This package can be installed by adding `protobuf_generate` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -20,9 +23,45 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/proto_gen>.
+## Usage
+
+`mix protobuf.generate` supports the same options as [`protoc-gen-elixir`](https://github.com/elixir-protobuf/protobuf#generate-elixir-code)
+
+### Arguments
+
+  * `file` - One or more `.proto` files to compile
+
+### Required options
+
+  * `--output-path` - Path to output directory
+
+### Optional options
+
+  * `--include-path` - Specify the directory in which to search for imports. Eqvivalent to `protoc` `-I` flag.
+  * `--tranform-module` - Module to do custom encoding/decoding for messages. See `Protobuf.TransformModule` for details.
+  * `--package-prefix` - Prefix generated Elixir modules. For example prefix modules with: `MyApp.Protos` use `--package-prefix=my_app.protos`.
+  * `--generate-descriptors` - Includes raw descriptors in the generated modules
+  * `--one-file-per-module` - Changes the way files are generated into directories. This option creates a file for each generated Elixir module.
+  * `--include-documentation` - Controls visibility of documentation of the generated modules. Setting `true` will not  have `@moduleoc false`
+  * `--plugins` - If you write services in protobuf, you can generate gRPC code by passing `--plugins=grpc`.
+
+
+```shell
+$ mix protobuf.generate --output-path=./lib --include-path=./priv/protos helloworld.proto
+$ mix protobuf.generate \
+  --include-path=priv/proto \
+  --include-path=deps/googleapis \
+  --generate-descriptors=true \
+  --output-path=./lib \
+  --plugins=ProtobufGenerate.Plugins.GRPCWithOptions \
+  google/api/annotations.proto google/api/http.proto helloworld.proto
+```
+
+## Extensions
+
+Extensions in the current project loaded automatically when running `mix protobuf.generate`. However they need to be already generated in order for `protobuf` to pick them up.
+
+**TODO**
 
 ## Features
 
@@ -30,7 +69,4 @@ be found at <https://hexdocs.pm/proto_gen>.
 
 * Allows integration into the codegen by using generator plugins. See `lib/generators/grpc.ex`
 
-
-## Protoc
-[Protoc](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) (protocol buffer compiler) is required to be installed. [Download and install](https://grpc.io/docs/protoc-installation/) the protocol buffer compiler (protoc).
 

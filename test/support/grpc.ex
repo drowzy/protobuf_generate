@@ -25,8 +25,7 @@ defmodule GRPC.Service do
 
   defmacro rpc(name, request, reply, options \\ quote(do: %{})) do
     quote do
-      @rpc_calls {unquote(name), unquote(request), unquote(reply),
-                  unquote(options)}
+      @rpc_calls {unquote(name), unquote(request), unquote(reply), unquote(options)}
     end
   end
 end
