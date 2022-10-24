@@ -1,9 +1,12 @@
 # Protobuf.Generate
 
-`protobuf.generate` is a mix task that allows you to call `protoc` without the need of a global installed plugin.
-The generator calls `protoc` using `descriptor_set_out` to output a `FileDescriptorSet` into a temporary file and used as input to [Protobuf](https://github.com/elixir-protobuf/protobuf) for decoding / generating elixir modules.
+[![GitHub actions Status](https://github.com/drowzy/protobuf_generate/workflows/ci/badge.svg)](https://github.com/drowzy/protobuf_generate/actions)
 
-The difference between `protobuf.generate` and `protoc-gen-elixir` is that `protoc-gen-elixir` is called as a plugin to `protoc` so it executes in a 
+`protobuf.generate` is a mix task that allows you to generate Elixir code using [Protobuf](https://github.com/elixir-protobuf/protobuf) without using the `protoc-gen-elixir` plugin.
+
+The generator calls `protoc` using `descriptor_set_out` to output a `FileDescriptorSet` into a temporary file for input to [Protobuf](https://github.com/elixir-protobuf/protobuf).
+
+The difference between `protobuf.generate` and `protoc-gen-elixir` is that `protoc-gen-elixir` is called as a plugin to `protoc` and therefor executes in a
 _global_ context while `protobuf.generate` executes in the context of the _local_ project. 
 
 By executing in the context of the local project:
