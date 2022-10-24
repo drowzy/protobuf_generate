@@ -74,11 +74,11 @@ $ mix protobuf.generate \
 ## Available plugins
 
 * `ProtobufGenerate.Plugins.GRPC` - Generate [gRPC](https://github.com/elixir-grpc/grpc) services
-* `ProtobufGenerate.Plugins.GRPCWithOptions` -  Generate [gRPC](https://github.com/elixir-grpc/grpc) services with `rpc` options (from extensions).
+* `ProtobufGenerate.Plugins.GRPCWithOptions` -  Generate [gRPC](https://github.com/elixir-grpc/grpc) services with method extension options.
 
 ## Extensions
 
-Extensions in the current project loaded automatically when running `mix protobuf.generate`. However they need to be already generated in order for `Protobuf.load_extensions/0` to pick them up.
+Extensions in the current project are loaded automatically when running `mix protobuf.generate`. However they need to be already generated in order for `Protobuf.load_extensions/0` to pick them up.
 
 ## Acknowledgements
 
