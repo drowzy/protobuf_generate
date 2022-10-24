@@ -57,7 +57,7 @@ end
 
   * `--include-documentation` - Controls visibility of documentation of the generated modules. Setting `true` will not  have `@moduleoc false`
 
-  * `--plugins` - If you write services in protobuf, you can generate gRPC code by passing `--plugins=grpc`.
+  * `--plugins` - Generator plugins. If you write services in protobuf, you can generate gRPC code by passing `--plugins=ProtobufGenerate.Plugins.GRPC`.
 
 
 ```shell
@@ -71,6 +71,15 @@ $ mix protobuf.generate \
   google/api/annotations.proto google/api/http.proto helloworld.proto
 ```
 
+## Available plugins
+
+* `ProtobufGenerate.Plugins.GRPC` - Generate [gRPC](https://github.com/elixir-grpc/grpc) services
+* `ProtobufGenerate.Plugins.GRPCWithOptions` -  Generate [gRPC](https://github.com/elixir-grpc/grpc) services with `rpc` options (from extensions).
+
 ## Extensions
 
 Extensions in the current project loaded automatically when running `mix protobuf.generate`. However they need to be already generated in order for `Protobuf.load_extensions/0` to pick them up.
+
+## Acknowledgements
+
+* [`protox`](https://github.com/ahamez/protox) for running `protoc` with `descriptor_set_out`

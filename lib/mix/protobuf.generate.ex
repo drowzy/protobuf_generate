@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Protobuf.Generate do
   @moduledoc """
   Generate Elixir code from `.proto` files.
 
-
   ## Arguments
 
   * `file` - One or more `.proto` files to compile
@@ -136,20 +135,6 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
     File.mkdir_p!(dir)
     File.write!(path, content)
-  end
-
-  defp load_plugins([]), do: []
-
-  defp load_plugins(plugins) do
-    for plugin <- plugins do
-      case Code.ensure_loaded(String.to_atom(plugin)) do
-        {:module, mod} ->
-          mod
-
-        {:error, reason} ->
-          Mix.raise("error loading plugin: #{inspect(plugin)} error: #{inspect(reason)}")
-      end
-    end
   end
 
   defp pop_values(opts, key) do

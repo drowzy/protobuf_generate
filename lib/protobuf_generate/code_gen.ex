@@ -43,8 +43,8 @@ defmodule ProtobufGenerate.CodeGen do
   end
 
   def eval({plugin, {_mod_name, _assigns} = msg}, _template) when is_atom(plugin) do
-    unless function_exported?(plugin, :template, 1) do
-      raise "#{inspect(plugin)} does not implement the `implement/1` callback"
+    unless function_exported?(plugin, :template, 0) do
+      raise "#{inspect(plugin)} does not implement the `template/0` callback"
     end
 
     eval(msg, plugin.template(%{}))
