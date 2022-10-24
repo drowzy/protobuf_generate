@@ -1,7 +1,11 @@
 defmodule ProtobufGenerate.Plugins.GRPCWithOptions do
   # ref: https://github.com/elixir-protobuf/protobuf/blob/main/lib/protobuf/protoc/generator/grpc.ex
+  @moduledoc """
+  Plugin to Generate gRPC code from protbuf service definitions, this plugin outputs any extension options
+  on service methods as a param to [`GRPC.Service.rpc/4`](https://github.com/drowzy/grpc/blob/grpc_transcoding/lib/grpc/service.ex#L56)
+  """
+
   @behaviour ProtobufGenerate.Plugin
-  @moduledoc false
 
   alias Protobuf.Protoc.Generator.Util
 

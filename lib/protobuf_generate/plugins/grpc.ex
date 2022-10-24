@@ -1,7 +1,10 @@
 defmodule ProtobufGenerate.Plugins.GRPC do
   # ref: https://github.com/elixir-protobuf/protobuf/blob/main/lib/protobuf/protoc/generator/grpc.ex
+  @moduledoc """
+  Plugin to Generate gRPC code from protbuf service definitions
+  """
+
   @behaviour ProtobufGenerate.Plugin
-  @moduledoc false
 
   alias Protobuf.Protoc.Generator.Util
 
