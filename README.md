@@ -1,6 +1,7 @@
 # Protobuf.Generate
 
-[![GitHub actions Status](https://github.com/drowzy/protobuf_generate/actions/workflows/ci/badge.svg)](https://github.com/drowzy/protobuf_generate/actions)
+![CI](https://github.com/drowzy/protobuf_generate/actions/workflows/ci.yml/badge.svg)
+[![Hex.pm Version](https://img.shields.io/hexpm/v/protobuf_generate.svg?style=flat-square)](https://hex.pm/packages/protobuf_generate)
 
 `protobuf.generate` is a mix task that allows you to generate Elixir code using [Protobuf](https://github.com/elixir-protobuf/protobuf) without using the `protoc-gen-elixir` plugin.
 
