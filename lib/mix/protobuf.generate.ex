@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
   """
   @shortdoc "Generate Elixir code from Protobuf definitions"
+  @requirements ["app.config"]
 
   use Mix.Task
 
@@ -92,10 +93,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
     end
   end
 
-  defp init(args) do
-    Mix.Task.run("compile", args)
-    Mix.Task.reenable("protobuf.generate")
-
+  defp init(_args) do
     Application.ensure_all_started(:protobuf)
     Protobuf.load_extensions()
   end
