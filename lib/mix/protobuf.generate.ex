@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
       |> Keyword.fetch!(:output_path)
       |> Path.expand()
 
-    Protobuf.load_extensions()
+    init(args)
 
     case Protoc.run(files, imports) do
       {:ok, bin} ->
@@ -90,6 +90,14 @@ defmodule Mix.Tasks.Protobuf.Generate do
         IO.puts(:stderr, "Failed to generate code: #{inspect(reason)}")
         exit({:shutdown, 1})
     end
+  end
+
+  defp init(args) do
+    Mix.Task.run("compile", args)
+    Mix.Task.reenable("protobuf.generate")
+
+    Application.ensure_all_started(:protobuf)
+    Protobuf.load_extensions()
   end
 
   defp decode(files, imports, bin) do

@@ -2,13 +2,13 @@ defmodule ProtobufGenerate.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/drowzy/protobuf_generate"
-  @version "0.1.0"
+  @version "0.1.1"
   @description "Protobuf code generation as a mix task"
 
   def project do
     [
       app: :protobuf_generate,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
