@@ -104,10 +104,10 @@ defmodule Mix.Tasks.Protobuf.Generate do
 
     files = normalize_import_paths(files, imports, [])
 
-    Google.Protobuf.Compiler.CodeGeneratorRequest.new(
+    %Google.Protobuf.Compiler.CodeGeneratorRequest{
       file_to_generate: files,
       proto_file: file_descriptors
-    )
+    }
   end
 
   defp generate(ctx, request) do
@@ -126,11 +126,10 @@ defmodule Mix.Tasks.Protobuf.Generate do
         CodeGen.generate(ctx, desc, plugins)
       end)
 
-    response =
-      Google.Protobuf.Compiler.CodeGeneratorResponse.new(
-        file: files,
-        supported_features: Protobuf.Protoc.CLI.supported_features()
-      )
+    response = %Google.Protobuf.Compiler.CodeGeneratorResponse{
+      file: files,
+      supported_features: Protobuf.Protoc.CLI.supported_features()
+    }
 
     response
   end
