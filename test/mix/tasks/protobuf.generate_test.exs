@@ -197,7 +197,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       "--include-path=#{tmp_dir}",
       "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
       "--output-path=#{tmp_dir}",
-      "--plugins=ProtobufGenerate.Plugins.GRPC",
+      "--plugin=ProtobufGenerate.Plugins.GRPC",
       proto_path
     ])
 

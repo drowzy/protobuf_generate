@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
   * `--generate-descriptors` - Includes raw descriptors in the generated modules
   * `--one-file-per-module` - Changes the way files are generated into directories. This option creates a file for each generated Elixir module.
   * `--include-documentation` - Controls visibility of documentation of the generated modules. Setting `true` will not  have `@moduleoc false`
-  * `--plugins` - If you write services in protobuf, you can generate gRPC code by passing `--plugins=grpc`.
+  * `--plugin` - If you write services in protobuf, you can generate gRPC code by passing `--plugin=grpc`.
 
   ## Examples
 
@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Protobuf.Generate do
         --include-path=deps/googleapis \
         --generate-descriptors=true \
         --output-path=./lib \
-        --plugins=ProtobufGenerate.Plugins.GRPC
+        --plugin=ProtobufGenerate.Plugins.GRPC
         google/api/annotations.proto google/api/http.proto helloworld.proto
 
   """
@@ -49,14 +49,14 @@ defmodule Mix.Tasks.Protobuf.Generate do
     transform_module: :string,
     include_docs: :boolean,
     one_file_per_module: :boolean,
-    plugins: :keep
+    plugin: :keep
   ]
 
   @impl Mix.Task
   @spec run(any) :: any
   def run(args) do
     {opts, files} = OptionParser.parse!(args, strict: @switches)
-    {plugins, opts} = pop_values(opts, :plugins)
+    {plugins, opts} = pop_values(opts, :plugin)
     {imports, opts} = pop_values(opts, :include_path)
 
     transform_module =
