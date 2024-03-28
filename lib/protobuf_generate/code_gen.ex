@@ -54,10 +54,10 @@ defmodule ProtobufGenerate.CodeGen do
     for {mod_name, content} <- module_definitions do
       file_name = Macro.underscore(mod_name) <> ".pb.ex"
 
-      Google.Protobuf.Compiler.CodeGeneratorResponse.File.new(
+      %Google.Protobuf.Compiler.CodeGeneratorResponse.File{
         name: file_name,
         content: content
-      )
+      }
     end
   end
 
@@ -71,10 +71,10 @@ defmodule ProtobufGenerate.CodeGen do
       |> Util.format()
 
     [
-      Google.Protobuf.Compiler.CodeGeneratorResponse.File.new(
+      %Google.Protobuf.Compiler.CodeGeneratorResponse.File{
         name: file_name,
         content: content
-      )
+      }
     ]
   end
 
