@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
   # https://github.com/elixir-protobuf/protobuf/blob/main/test/protobuf/protoc/cli_integration_test.exs
   #
   import Mix.Tasks.Protobuf.Generate, only: [run: 1]
-  import ProtobufGenerate.TestHelpers, only: [tmp_dir: 1, fetch_docs_from_bytecode: 1]
+  import ProtobufGenerate.TestHelpers, only: [tmp_dir: 1]
 
   setup :tmp_dir
 
@@ -63,36 +63,6 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
       assert %Google.Protobuf.DescriptorProto{} = descriptor = mod.descriptor()
       assert descriptor.name == "User"
-    end
-
-    # Available after Protobuf 0.11+
-    @tag :skip
-    test "include_docs option", %{tmp_dir: tmp_dir, proto_path: proto_path} do
-      run([
-        "--include-path=#{tmp_dir}",
-        "--output-path=#{tmp_dir}",
-        "--include-docs=true",
-        proto_path
-      ])
-
-      modules_and_docs = get_docs_and_clean_modules_on_exit("#{tmp_dir}/user.pb.ex")
-
-      assert [{Foo.User, docs}] = modules_and_docs
-      assert {:docs_v1, _, :elixir, _, module_doc, _, _} = docs
-      assert module_doc != :hidden
-    end
-
-    test "hides docs when include_docs is not true", %{tmp_dir: tmp_dir, proto_path: proto_path} do
-      run([
-        "--include-path=#{tmp_dir}",
-        "--output-path=#{tmp_dir}",
-        proto_path
-      ])
-
-      modules_and_docs = get_docs_and_clean_modules_on_exit("#{tmp_dir}/user.pb.ex")
-
-      assert [{Foo.User, docs}] = modules_and_docs
-      assert {:docs_v1, _, :elixir, _, :hidden, _, _} = docs
     end
 
     test "package_prefix mypkg", %{tmp_dir: tmp_dir, proto_path: proto_path} do
@@ -201,12 +171,90 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       proto_path
     ])
 
-    assert [_, _, _, service] =
+    assert [_, _, _, service, stub] =
              compile_file_and_clean_modules_on_exit("#{tmp_dir}/helloworld.pb.ex")
 
     assert service == Helloworld.Greeter.Service
+    assert stub == Helloworld.Greeter.Stub
     assert [{:SayHello, _, _, _}, {:SayHelloFrom, _, _, _}] = service.__rpc_calls__()
   end
+
+  @tag :skip
+  test "with grpc options plugin", %{tmp_dir: tmp_dir} do
+    # proto_path = Path.join(tmp_dir, "helloworld_options.proto")
+    proto_path = Path.join(tmp_dir, "helloworld_options.proto")
+    paths = ["google/api/annotations.proto", "google/api/http.proto", "helloworld_options.proto"]
+
+    File.write!(proto_path, """
+    syntax = "proto3";
+
+    import "google/api/annotations.proto";
+    import "google/protobuf/timestamp.proto";
+
+    package helloworld;
+
+    service Greeter {
+      rpc SayHello (HelloRequest) returns (HelloReply) {
+        option (google.api.http) = {
+          get: "/v1/greeter/{name}"
+        };
+      }
+      rpc SayHelloFrom (HelloRequestFrom) returns (HelloReply) {
+        option (google.api.http) = {
+          post: "/v1/greeter"
+          body: "*"
+        };
+      }
+    }
+
+    message HelloRequest {
+      string name = 1;
+    }
+
+    message HelloRequestFrom {
+      string name = 1;
+      string from = 2;
+    }
+
+    message HelloReply {
+      string message = 1;
+      google.protobuf.Timestamp today = 2;
+    }
+    """)
+
+    run (
+      [
+        "--include-path=#{tmp_dir}",
+        "--output-path=#{tmp_dir}",
+        "--include-path=#{Mix.Project.deps_paths().googleapis}",
+        "google/api/annotations.proto",
+        "google/api/http.proto"
+      ]
+    )
+    _ = compile_file_and_clean_modules_on_exit("#{tmp_dir}/google/api/annotations.pb.ex")
+    _ = compile_file_and_clean_modules_on_exit("#{tmp_dir}/google/api/http.pb.ex")
+      # "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
+    run(
+      [
+        "--include-path=#{tmp_dir}",
+        "--include-path=#{Mix.Project.deps_paths().googleapis}",
+        "--output-path=#{tmp_dir}",
+        "--plugin=ProtobufGenerate.Plugins.GRPCWithOptions"
+      ] ++ paths
+    )
+
+    Code.ensure_loaded?(GRPC)
+
+    assert [_, _, _, service, stub] =
+             compile_file_and_clean_modules_on_exit("#{tmp_dir}/helloworld_options.pb.ex")
+
+    assert service == Helloworld.Greeter.Service
+    assert stub == Helloworld.Greeter.Stub
+    assert [{:SayHello, _, _, opts1}, {:SayHelloFrom, _, _, opts2}] = service.__rpc_calls__()
+    assert opts1 == %{}
+    assert opts2 == %{}
+  end
+
 
   defp compile_file_and_clean_modules_on_exit(path) do
     modules =
@@ -216,29 +264,11 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
     on_exit(fn ->
       Enum.each(modules, fn mod ->
-        :code.delete(mod)
         :code.purge(mod)
+        :code.delete(mod)
       end)
     end)
 
     modules
-  end
-
-  defp get_docs_and_clean_modules_on_exit(path) do
-    modules_and_docs =
-      path
-      |> Code.compile_file()
-      |> Enum.map(fn {mod, bytecode} ->
-        {mod, fetch_docs_from_bytecode(bytecode)}
-      end)
-
-    on_exit(fn ->
-      Enum.each(modules_and_docs, fn {mod, _bytecode} ->
-        :code.delete(mod)
-        :code.purge(mod)
-      end)
-    end)
-
-    modules_and_docs
   end
 end

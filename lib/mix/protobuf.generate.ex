@@ -78,8 +78,8 @@ defmodule Mix.Tasks.Protobuf.Generate do
           gen_descriptors?: Keyword.get(opts, :generate_descriptors, false),
           plugins: plugins,
           transform_module: transform_module,
-          package_prefix: Keyword.get(opts, :package_prefix)
-          # include_docs?: Keyword.get(opts, :include_docs, false)
+          package_prefix: Keyword.get(opts, :package_prefix),
+          include_docs?: Keyword.get(opts, :include_docs, false)
         }
 
         request = decode(files, imports, bin)

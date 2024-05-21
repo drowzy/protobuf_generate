@@ -18,7 +18,7 @@ defmodule ProtobufGenerate.TestHelpers do
 
   # This code is taken from Code.fetch_docs/1 in Elixir (v1.13 in particular).
   def fetch_docs_from_bytecode(bytecode) when is_binary(bytecode) do
-    docs_chunk = 'Docs'
+    docs_chunk = ~c"Docs"
     assert {:ok, {_module, [{^docs_chunk, bin}]}} = :beam_lib.chunks(bytecode, [docs_chunk])
     :erlang.binary_to_term(bin)
   end
