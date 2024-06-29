@@ -15,7 +15,7 @@ defmodule ProtobufGenerate.Protoc do
 
   defp run_protoc(proto_files, args) do
     outfile_name = "protobuf_#{random_string()}"
-    outfile_path = Path.join([Mix.Project.build_path(), outfile_name])
+    outfile_path = Path.join([System.tmp_dir!(), outfile_name])
 
     cmd_args =
       ["--include_imports", "--include_source_info", "-o", outfile_path] ++ args ++ proto_files
