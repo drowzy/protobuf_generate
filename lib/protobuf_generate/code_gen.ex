@@ -47,7 +47,7 @@ defmodule ProtobufGenerate.CodeGen do
       raise "#{inspect(plugin)} does not implement the `template/0` callback"
     end
 
-    eval(msg, plugin.template(%{}))
+    eval(msg, plugin.template())
   end
 
   defp generate_files(module_definitions, _desc, _file_per_module = true) do
