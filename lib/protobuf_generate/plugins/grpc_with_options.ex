@@ -71,7 +71,8 @@ defmodule ProtobufGenerate.Plugins.GRPCWithOptions do
          service_name: name,
          methods: methods,
          descriptor_fun_body: descriptor_fun_body,
-         version: Util.version()
+         version: Util.version(),
+         module_doc?: ctx.include_docs?
        ]}
     end
   end
