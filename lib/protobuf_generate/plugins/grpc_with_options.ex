@@ -13,9 +13,7 @@ defmodule ProtobufGenerate.Plugins.GRPCWithOptions do
   def template do
     """
     defmodule <%= @module %>.Service do
-      <%= unless @module_doc? do %>
       @moduledoc false
-      <% end %>
       use GRPC.Service, name: <%= inspect(@service_name) %>, protoc_gen_elixir_version: "<%= @version %>"
 
       <%= if @descriptor_fun_body do %>
@@ -31,9 +29,7 @@ defmodule ProtobufGenerate.Plugins.GRPCWithOptions do
     end
 
     defmodule <%= @module %>.Stub do
-      <%= unless @module_doc? do %>
       @moduledoc false
-      <% end %>
       use GRPC.Stub, service: <%= @module %>.Service
     end
     """
