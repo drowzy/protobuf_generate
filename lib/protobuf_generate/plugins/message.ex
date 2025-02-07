@@ -381,23 +381,32 @@ defmodule ProtobufGenerate.Plugins.Message do
       field_comments =
         Enum.with_index(desc.field, fn field, index ->
           ctx = Context.append_comment_path(ctx, "2.#{index}")
-
-          comment =
-            Comment.get(ctx)
-            |> normalize_indentation()
-
-          if comment != "" do
-            "| #{field.number} | `#{field.name}` | `#{field_type_name(ctx, field)}` | #{make_safe_for_table(comment)} |"
-          else
-            "| #{field.number} | `#{field.name}` | `#{field_type_name(ctx, field)}` |   |"
-          end
+          {field_comment(ctx, field), field.name}
         end)
+        |> Enum.sort_by(fn {_comment, name} -> name end)
+        |> Enum.map(fn {comment, _name} -> comment end)
 
       comments =
         if length(field_comments) > 0 do
-          comments <>
-            "\n\n## Fields\n\n| # | Name | Type | Notes |\n|---|---|---|---|\n" <>
-            Enum.join(field_comments, "\n")
+          """
+          #{comments}
+
+          ## Fields
+
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              #{Enum.join(field_comments)}
+            </tbody>
+          </table>
+          """
         else
           comments
         end
@@ -406,6 +415,30 @@ defmodule ProtobufGenerate.Plugins.Message do
     else
       ""
     end
+  end
+
+  defp field_comment(ctx, field) do
+    type =
+      case from_enum(field.type) do
+        type when type in [:enum, :message] and not is_nil(field.type_name) ->
+          Util.type_from_type_name(ctx, field.type_name)
+
+        type ->
+          type
+      end
+
+    comment =
+      Comment.get(ctx)
+      |> String.replace("\n\n", "<br>")
+
+    """
+    <tr>
+      <td>#{field.number}</td>
+      <td><code style="font-weight: bold">#{field.name}</code></td>
+      <td><code>#{type}</code></td>
+      <td>#{comment}</td>
+    </tr>
+    """
   end
 
   defp normalize_indentation(comments) do
@@ -433,11 +466,5 @@ defmodule ProtobufGenerate.Plugins.Message do
     comments
     |> String.split("\n")
     |> Enum.map_join("\n", fn line -> String.duplicate(" ", count) <> line end)
-  end
-
-  defp make_safe_for_table(comment) do
-    comment
-    |> String.replace(~r/\|/, "")
-    |> String.replace(~r/\n/, " ")
   end
 end
