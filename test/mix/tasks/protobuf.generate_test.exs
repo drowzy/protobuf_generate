@@ -103,6 +103,18 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       assert [LowercaseEnum, UsesLowercaseEnum] =
                compile_file_and_clean_modules_on_exit("#{tmp_dir}/lowercase_enum.pb.ex")
     end
+
+    test "does not produce moduledoc", %{tmp_dir: tmp_dir, proto_path: proto_path} do
+      run([
+        "--include-docs",
+        "--include-path=#{tmp_dir}",
+        "--output-path=#{tmp_dir}",
+        proto_path
+      ])
+
+      file = File.read!("#{tmp_dir}/user.pb.ex")
+      assert file =~ "defmodule Foo.User do\n  @moduledoc false\n"
+    end
   end
 
   # Regression test for https://github.com/elixir-protobuf/protobuf/issues/242

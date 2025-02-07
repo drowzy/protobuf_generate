@@ -375,9 +375,15 @@ defmodule ProtobufGenerate.Plugins.Message do
   defp from_enum(:TYPE_SINT64), do: :sint64
 
   defp get_comments(ctx, _desc) do
-    Comment.get(ctx)
-    |> normalize_indentation()
-    |> indent(2)
+    comments =
+      Comment.get(ctx)
+      |> normalize_indentation()
+
+    if comments != "" do
+      indent(comments, 2)
+    else
+      ""
+    end
   end
 
   defp normalize_indentation(comments) do
