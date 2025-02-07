@@ -5,6 +5,7 @@ defmodule ProtobufGenerate.Plugins.Message do
   require EEx
   @behaviour ProtobufGenerate.Plugin
 
+  alias Protobuf.Protoc.Generator.Comment
   alias Protobuf.Protoc.Context
   alias Protobuf.Protoc.Generator.Util
 
@@ -12,7 +13,11 @@ defmodule ProtobufGenerate.Plugins.Message do
   def template do
     """
     defmodule <%= @module %> do
-      @moduledoc false
+    <%= if @include_docs? and @comments != "" do %>
+      @moduledoc \"\"\"
+    <%= @comments %>
+      \"\"\"<% else %>
+      @moduledoc false<% end %>
       use Protobuf<%= @use_options %>
 
       <%= if @descriptor_fun_body do %>
@@ -43,11 +48,15 @@ defmodule ProtobufGenerate.Plugins.Message do
 
   @impl true
   def generate(%Context{} = ctx, %Google.Protobuf.FileDescriptorProto{message_type: desc}) do
+    ctx = Context.append_comment_path(ctx, "4")
     generate(ctx, desc)
   end
 
   def generate(%Context{} = ctx, descs) when is_list(descs) do
-    for desc <- descs, do: generate(ctx, desc)
+    Enum.with_index(descs, fn desc, index ->
+      ctx = Context.append_comment_path(ctx, to_string(index))
+      generate(ctx, desc)
+    end)
   end
 
   def generate(%Context{} = ctx, %Google.Protobuf.DescriptorProto{} = desc) do
@@ -55,6 +64,7 @@ defmodule ProtobufGenerate.Plugins.Message do
     msg_name = Util.mod_name(ctx, new_ns)
     fields = get_fields(ctx, desc)
     extensions = get_extensions(desc)
+    comments = get_comments(ctx, desc)
 
     descriptor_fun_body =
       if ctx.gen_descriptors? do
@@ -74,7 +84,9 @@ defmodule ProtobufGenerate.Plugins.Message do
        fields: gen_fields(ctx.syntax, fields),
        descriptor_fun_body: descriptor_fun_body,
        transform_module: ctx.transform_module,
-       extensions: extensions}
+       extensions: extensions,
+       comments: comments,
+       include_docs?: ctx.include_docs?}
 
     gen_nested_enums(ctx, desc) ++ nested_msgs ++ [msg]
   end
@@ -359,4 +371,43 @@ defmodule ProtobufGenerate.Plugins.Message do
   defp from_enum(:TYPE_SFIXED64), do: :sfixed64
   defp from_enum(:TYPE_SINT32), do: :sint32
   defp from_enum(:TYPE_SINT64), do: :sint64
+
+  defp get_comments(ctx, _desc) do
+    comments =
+      Comment.get(ctx)
+      |> normalize_indentation()
+
+    if comments != "" do
+      indent(comments, 2)
+    else
+      ""
+    end
+  end
+
+  defp normalize_indentation(comments) do
+    indentation =
+      String.split(comments, "\n")
+      # Due to String.trim/1 in Comment.get/1
+      |> Enum.drop(1)
+      |> Enum.reject(&String.match?(&1, ~r/^\s*$/))
+      |> Enum.map(fn line ->
+        Regex.run(~r/^\s*/, line, capture: :first)
+        |> List.first()
+        |> String.length()
+      end)
+      |> Enum.min(fn -> 0 end)
+
+    comments
+    |> String.split("\n")
+    |> Enum.map(fn line ->
+      String.replace_prefix(line, String.duplicate(" ", indentation), "")
+    end)
+    |> Enum.join("\n")
+  end
+
+  defp indent(comments, count) do
+    comments
+    |> String.split("\n")
+    |> Enum.map_join("\n", fn line -> String.duplicate(" ", count) <> line end)
+  end
 end

@@ -116,7 +116,8 @@ defmodule ProtobufGenerate.Plugin do
           | [template_assigns() | {atom(), template_assigns()}]
 
   @callback template() :: String.t()
-  @callback generate(Protobuf.Protoc.Context.t(), Google.Protobuf.FileDescriptorProto) :: state()
+  @callback generate(Protobuf.Protoc.Context.t(), Google.Protobuf.FileDescriptorProto.t()) ::
+              state()
 
   def load([]), do: []
 
