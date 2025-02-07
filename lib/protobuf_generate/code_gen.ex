@@ -9,7 +9,8 @@ defmodule ProtobufGenerate.CodeGen do
     ctx =
       %Context{
         ctx
-        | syntax: syntax(desc.syntax),
+        | comments: Protobuf.Protoc.Generator.Comment.parse(desc),
+          syntax: syntax(desc.syntax),
           package: desc.package,
           dep_type_mapping: get_dep_type_mapping(ctx, desc.dependency, desc.name)
       }
@@ -78,7 +79,7 @@ defmodule ProtobufGenerate.CodeGen do
     ]
   end
 
-  defp get_dep_type_mapping(%{global_type_mapping: global_mapping}, deps, file_name) do
+  defp get_dep_type_mapping(%Context{global_type_mapping: global_mapping}, deps, file_name) do
     mapping =
       Enum.reduce(deps, %{}, fn dep, acc ->
         Map.merge(acc, global_mapping[dep])
@@ -88,5 +89,6 @@ defmodule ProtobufGenerate.CodeGen do
   end
 
   defp syntax("proto3"), do: :proto3
-  defp syntax(_), do: :proto2
+  defp syntax("proto2"), do: :proto2
+  defp syntax(nil), do: :proto2
 end
