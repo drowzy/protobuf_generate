@@ -13,13 +13,11 @@ defmodule ProtobufGenerate.Plugins.Message do
   def template do
     """
     defmodule <%= @module %> do
-      <%= if @include_docs? and @comments != "" do %>
+    <%= if @include_docs? and @comments != "" do %>
       @moduledoc \"\"\"
     <%= @comments %>
-      \"\"\"
-      <% else %>
-      @moduledoc false
-      <% end %>
+      \"\"\"<% else %>
+      @moduledoc false<% end %>
       use Protobuf<%= @use_options %>
 
       <%= if @descriptor_fun_body do %>

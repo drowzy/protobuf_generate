@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       ])
 
       file = File.read!("#{tmp_dir}/user.pb.ex")
-      assert file =~ "defmodule Foo.User do\n  @moduledoc false\n"
+      assert file =~ "defmodule Foo.User do\n  @moduledoc false\n  use Protobuf"
     end
   end
 
