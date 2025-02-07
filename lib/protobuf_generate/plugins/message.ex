@@ -372,12 +372,36 @@ defmodule ProtobufGenerate.Plugins.Message do
   defp from_enum(:TYPE_SINT32), do: :sint32
   defp from_enum(:TYPE_SINT64), do: :sint64
 
-  defp get_comments(ctx, _desc) do
+  defp get_comments(ctx, desc) do
     comments =
       Comment.get(ctx)
       |> normalize_indentation()
 
     if comments != "" do
+      field_comments =
+        Enum.with_index(desc.field, fn field, index ->
+          ctx = Context.append_comment_path(ctx, "2.#{index}")
+
+          comment =
+            Comment.get(ctx)
+            |> normalize_indentation()
+
+          if comment != "" do
+            "| #{field.number} | `#{field.name}` | `#{field_type_name(ctx, field)}` | #{make_safe_for_table(comment)} |"
+          else
+            "| #{field.number} | `#{field.name}` | `#{field_type_name(ctx, field)}` |   |"
+          end
+        end)
+
+      comments =
+        if length(field_comments) > 0 do
+          comments <>
+            "\n\n## Fields\n\n| # | Name | Type | Notes |\n|---|---|---|---|\n" <>
+            Enum.join(field_comments, "\n")
+        else
+          comments
+        end
+
       indent(comments, 2)
     else
       ""
@@ -409,5 +433,11 @@ defmodule ProtobufGenerate.Plugins.Message do
     comments
     |> String.split("\n")
     |> Enum.map_join("\n", fn line -> String.duplicate(" ", count) <> line end)
+  end
+
+  defp make_safe_for_table(comment) do
+    comment
+    |> String.replace(~r/\|/, "")
+    |> String.replace(~r/\n/, " ")
   end
 end
