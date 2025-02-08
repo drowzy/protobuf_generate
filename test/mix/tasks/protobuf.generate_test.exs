@@ -288,7 +288,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
         // Multi-line field comment
         //
-        // With a second line that continues onto
+        // With a second line that _continues_ onto
         // a third.
         bool active = 2;
 
@@ -312,7 +312,6 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       ])
 
       file = File.read!("#{tmp_dir}/user.pb.ex")
-      IO.puts(file)
 
       assert file =~ """
              defmodule Foo.UserWithDocs do
@@ -326,38 +325,18 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
                ## Fields
 
-               <table>
-                 <thead>
-                   <tr>
-                     <th>#</th>
-                     <th>Name</th>
-                     <th>Type</th>
-                     <th>Notes</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr>
-                 <td>2</td>
-                 <td><code style="font-weight: bold">active</code></td>
-                 <td><code>bool</code></td>
-                 <td>Multi-line field comment<br> With a second line that continues onto
-                a third.</td>
-               </tr>
-               <tr>
-                 <td>3</td>
-                 <td><code style="font-weight: bold">created_at</code></td>
-                 <td><code>Foo.SubMessage</code></td>
-                 <td></td>
-               </tr>
-               <tr>
-                 <td>1</td>
-                 <td><code style="font-weight: bold">email</code></td>
-                 <td><code>string</code></td>
-                 <td>Single-line field comment</td>
-               </tr>
+               | # | Name | Type | Notes |
+               |---|------|------|-------|
+               | 2 | **`active`** | `bool` | Single-line field comment |
+               | 3 | **`created_at`** | `Foo.SubMessage` | Multi-line field comment |
+               | 1 | **`email`** | `string` |  |
 
-                 </tbody>
-               </table>
+               ### Additional Notes
+
+                 * `created_at` (`Foo.SubMessage`): Multi-line field comment
+
+                    With a second line that _continues_ onto
+                    a third.
 
                \"\"\"
              """
