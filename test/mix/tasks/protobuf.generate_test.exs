@@ -103,6 +103,18 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       assert [LowercaseEnum, UsesLowercaseEnum] =
                compile_file_and_clean_modules_on_exit("#{tmp_dir}/lowercase_enum.pb.ex")
     end
+
+    test "does not produce moduledoc", %{tmp_dir: tmp_dir, proto_path: proto_path} do
+      run([
+        "--include-docs",
+        "--include-path=#{tmp_dir}",
+        "--output-path=#{tmp_dir}",
+        proto_path
+      ])
+
+      file = File.read!("#{tmp_dir}/user.pb.ex")
+      assert file =~ "defmodule Foo.User do\n  @moduledoc false\n  use Protobuf"
+    end
   end
 
   # Regression test for https://github.com/elixir-protobuf/protobuf/issues/242
@@ -222,18 +234,17 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
     }
     """)
 
-    run (
-      [
-        "--include-path=#{tmp_dir}",
-        "--output-path=#{tmp_dir}",
-        "--include-path=#{Mix.Project.deps_paths().googleapis}",
-        "google/api/annotations.proto",
-        "google/api/http.proto"
-      ]
-    )
+    run([
+      "--include-path=#{tmp_dir}",
+      "--output-path=#{tmp_dir}",
+      "--include-path=#{Mix.Project.deps_paths().googleapis}",
+      "google/api/annotations.proto",
+      "google/api/http.proto"
+    ])
+
     _ = compile_file_and_clean_modules_on_exit("#{tmp_dir}/google/api/annotations.pb.ex")
     _ = compile_file_and_clean_modules_on_exit("#{tmp_dir}/google/api/http.pb.ex")
-      # "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
+    # "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
     run(
       [
         "--include-path=#{tmp_dir}",
@@ -255,6 +266,60 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
     assert opts2 == %{}
   end
 
+  describe "with comments" do
+    setup %{tmp_dir: tmp_dir} do
+      proto_path = Path.join(tmp_dir, "user.proto")
+
+      File.write!(proto_path, """
+      syntax = "proto3";
+
+      package foo;
+
+      // User message first line
+      //
+      // User message second line that continues onto a
+      // third line.
+      //
+      //   This line has `indentation` and *styling*.
+      //
+      message UserWithDocs {
+        // Single-line field comment
+        string email = 1;
+
+        // Multi-line field comment
+        //
+        // With a second line that continues onto
+        // a third.
+        bool active = 2;
+      }
+      """)
+
+      %{proto_path: proto_path}
+    end
+
+    test "moduledoc has comprehensive documentation", %{tmp_dir: tmp_dir, proto_path: proto_path} do
+      run([
+        "--include-docs",
+        "--include-path=#{tmp_dir}",
+        "--output-path=#{tmp_dir}",
+        proto_path
+      ])
+
+      file = File.read!("#{tmp_dir}/user.pb.ex")
+
+      assert file =~ """
+             defmodule Foo.UserWithDocs do
+               @moduledoc \"\"\"
+               User message first line
+
+               User message second line that continues onto a
+               third line.
+
+                 This line has `indentation` and *styling*.
+               \"\"\"
+             """
+    end
+  end
 
   defp compile_file_and_clean_modules_on_exit(path) do
     modules =
