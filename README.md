@@ -58,7 +58,7 @@ end
 
   * `--include-documentation` - Controls visibility of documentation of the generated modules. Setting `true` will not  have `@moduleoc false`
 
-  * `--plugins` - Generator plugins. If you write services in protobuf, you can generate gRPC code by passing `--plugins=ProtobufGenerate.Plugins.GRPC`.
+  * `--plugins=` - Generator plugins. If you write services in protobuf, you can generate gRPC code by passing `--plugin=ProtobufGenerate.Plugins.GRPC`.
 
 
 ```shell
@@ -68,7 +68,7 @@ $ mix protobuf.generate \
   --include-path=deps/googleapis \
   --generate-descriptors=true \
   --output-path=./lib \
-  --plugins=ProtobufGenerate.Plugins.GRPCWithOptions \
+  --plugin=ProtobufGenerate.Plugins.GRPCWithOptions \
   google/api/annotations.proto google/api/http.proto helloworld.proto
 ```
 
