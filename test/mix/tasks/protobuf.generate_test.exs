@@ -104,7 +104,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
                compile_file_and_clean_modules_on_exit("#{tmp_dir}/lowercase_enum.pb.ex")
     end
 
-    test "does not produce moduledoc", %{tmp_dir: tmp_dir, proto_path: proto_path} do
+    test "produces a moduledoc with generic message", %{tmp_dir: tmp_dir, proto_path: proto_path} do
       run([
         "--include-docs",
         "--include-path=#{tmp_dir}",
@@ -113,7 +113,20 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       ])
 
       file = File.read!("#{tmp_dir}/user.pb.ex")
-      assert file =~ "defmodule Foo.User do\n  @moduledoc false\n  use Protobuf"
+
+      assert file =~ """
+             defmodule Foo.User do
+               @moduledoc \"\"\"
+               Automatically generated module for User
+
+               ## Fields
+
+               | # | Name | Type | Notes |
+               |---|------|------|-------|
+               | 1 | **`email`** | `string` |  |
+
+               \"\"\"
+             """
     end
   end
 
