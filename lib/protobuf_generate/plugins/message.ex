@@ -382,14 +382,15 @@ defmodule ProtobufGenerate.Plugins.Message do
 
     if comments != "" do
       fields =
-        Enum.sort_by(desc.field, fn field -> field.name end)
-        |> Enum.with_index(fn field, index ->
+        Enum.with_index(desc.field, fn field, index ->
           ctx = Context.append_comment_path(ctx, "2.#{index}")
-          field_comment(ctx, field)
+          {field.name, field_comment(ctx, field)}
         end)
+        |> Enum.sort_by(fn {name, _comment} -> name end)
+        |> Enum.map(fn {_name, comment} -> comment end)
 
       field_rows =
-        Enum.map(fields, fn {comment, _name} -> comment end)
+        Enum.map(fields, fn {row, _additional} -> row end)
         |> Enum.join("\n")
 
       additional_notes =

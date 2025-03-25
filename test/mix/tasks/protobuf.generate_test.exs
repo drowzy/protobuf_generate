@@ -340,13 +340,13 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
                | # | Name | Type | Notes |
                |---|------|------|-------|
-               | 2 | **`active`** | `bool` | Single-line field comment |
-               | 3 | **`created_at`** | `Foo.SubMessage` | Multi-line field comment |
-               | 1 | **`email`** | `string` |  |
+               | 2 | **`active`** | `bool` | Multi-line field comment |
+               | 3 | **`created_at`** | `Foo.SubMessage` |  |
+               | 1 | **`email`** | `string` | Single-line field comment |
 
                ### Additional Notes
 
-                 * `created_at` (`Foo.SubMessage`): Multi-line field comment
+                 * `active` (`bool`): Multi-line field comment
 
                     With a second line that _continues_ onto
                     a third.
