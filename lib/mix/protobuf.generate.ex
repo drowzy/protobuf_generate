@@ -123,7 +123,17 @@ defmodule Mix.Tasks.Protobuf.Generate do
     files =
       Enum.flat_map(request.file_to_generate, fn file ->
         desc = Enum.find(request.proto_file, &(&1.name == file))
-        CodeGen.generate(ctx, desc, plugins)
+
+        if desc == nil do
+          IO.puts(
+            :stderr,
+            "Failed to locate the description for #{file}. Check include paths and paths to proto files."
+          )
+
+          []
+        else
+          CodeGen.generate(ctx, desc, plugins)
+        end
       end)
 
     response = %Google.Protobuf.Compiler.CodeGeneratorResponse{
