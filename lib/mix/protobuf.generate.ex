@@ -79,7 +79,8 @@ defmodule Mix.Tasks.Protobuf.Generate do
           plugins: plugins,
           transform_module: transform_module,
           package_prefix: Keyword.get(opts, :package_prefix),
-          include_docs?: Keyword.get(opts, :include_docs, false)
+          include_docs?: Keyword.get(opts, :include_docs, false),
+          one_file_per_module?: Keyword.get(opts, :one_file_per_module, false)
         }
 
         request = decode(files, imports, bin)
