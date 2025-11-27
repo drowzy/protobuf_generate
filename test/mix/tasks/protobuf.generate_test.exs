@@ -199,7 +199,8 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
   # Regression test for https://github.com/elixir-protobuf/protobuf/issues/242
   test "with external packages and the package_prefix option", %{tmp_dir: tmp_dir} do
-    proto_path = Path.join(tmp_dir, "timestamp_wrapper.proto")
+    proto_file = "timestamp_wrapper.proto"
+    proto_path = Path.join(tmp_dir, proto_file)
 
     File.write!(proto_path, """
     syntax = "proto3";
@@ -216,7 +217,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
       "--output-path=#{tmp_dir}",
       "--package-prefix=my_type",
-      proto_path
+      proto_file
     ])
 
     assert [mod] = compile_file_and_clean_modules_on_exit("#{tmp_dir}/timestamp_wrapper.pb.ex")
@@ -226,7 +227,8 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
   end
 
   test "with grpc plugin", %{tmp_dir: tmp_dir} do
-    proto_path = Path.join(tmp_dir, "helloworld.proto")
+    proto_file = "helloworld.proto"
+    proto_path = Path.join(tmp_dir, proto_file)
 
     File.write!(proto_path, """
     syntax = "proto3";
@@ -260,7 +262,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       "--include-path=#{Mix.Project.deps_paths().google_protobuf}/src",
       "--output-path=#{tmp_dir}",
       "--plugin=ProtobufGenerate.Plugins.GRPC",
-      proto_path
+      proto_file
     ])
 
     assert [_, _, _, service, stub] =
@@ -274,7 +276,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
   @tag :skip
   test "with grpc options plugin", %{tmp_dir: tmp_dir} do
     # proto_path = Path.join(tmp_dir, "helloworld_options.proto")
-    proto_path = Path.join(tmp_dir, "helloworld_options.proto")
+    proto_path = "helloworld_options.proto"
     paths = ["google/api/annotations.proto", "google/api/http.proto", "helloworld_options.proto"]
 
     File.write!(proto_path, """

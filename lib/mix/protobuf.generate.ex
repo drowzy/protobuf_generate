@@ -124,7 +124,17 @@ defmodule Mix.Tasks.Protobuf.Generate do
     files =
       Enum.flat_map(request.file_to_generate, fn file ->
         desc = Enum.find(request.proto_file, &(&1.name == file))
-        CodeGen.generate(ctx, desc, plugins)
+
+        if desc == nil do
+          IO.puts(
+            :stderr,
+            "Failed to locate the description for #{file}. Check include paths and paths to proto files."
+          )
+
+          []
+        else
+          CodeGen.generate(ctx, desc, plugins)
+        end
       end)
 
     response = %Google.Protobuf.Compiler.CodeGeneratorResponse{
@@ -157,14 +167,15 @@ defmodule Mix.Tasks.Protobuf.Generate do
   defp normalize_import_paths([], _, acc), do: Enum.reverse(acc)
 
   defp normalize_import_paths([file | rest], imports, acc) do
-    file_path =
-      Enum.reduce_while(imports, file, fn i, file ->
-        relative_path = Path.relative_to(file, i)
+    {_, file_path} =
+      Enum.reduce_while(imports, {file, nil}, fn i, {filename, _found_path} ->
+        abs_path = Path.join(i, filename)
 
-        if relative_path == file do
-          {:cont, file}
+        if File.exists?(abs_path) do
+          {:halt, {filename, filename}}
         else
-          {:halt, relative_path}
+          relative_path = Path.relative_to(filename, i)
+          {:cont, {filename, relative_path}}
         end
       end)
 
