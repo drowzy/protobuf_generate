@@ -115,6 +115,73 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       file = File.read!("#{tmp_dir}/user.pb.ex")
       assert file =~ "defmodule Foo.User do\n  @moduledoc false\n  use Protobuf"
     end
+
+    test "one_file_per_module option generates separate files", %{tmp_dir: tmp_dir} do
+      proto_path = Path.join(tmp_dir, "multi_message.proto")
+
+      File.write!(proto_path, """
+      syntax = "proto3";
+
+      package foo;
+
+      message User {
+        string email = 1;
+      }
+
+      message Post {
+        string title = 1;
+        string content = 2;
+      }
+      """)
+
+      run([
+        "--include-path=#{tmp_dir}",
+        "--output-path=#{tmp_dir}",
+        "--one-file-per-module=true",
+        proto_path
+      ])
+
+      assert File.exists?("#{tmp_dir}/foo/user.pb.ex")
+      assert File.exists?("#{tmp_dir}/foo/post.pb.ex")
+
+      user_mods = compile_file_and_clean_modules_on_exit("#{tmp_dir}/foo/user.pb.ex")
+      post_mods = compile_file_and_clean_modules_on_exit("#{tmp_dir}/foo/post.pb.ex")
+
+      assert user_mods == [Foo.User]
+      assert post_mods == [Foo.Post]
+    end
+
+    test "without one_file_per_module option generates single file", %{tmp_dir: tmp_dir} do
+      proto_path = Path.join(tmp_dir, "multi_message.proto")
+
+      File.write!(proto_path, """
+      syntax = "proto3";
+
+      package foo;
+
+      message User {
+        string email = 1;
+      }
+
+      message Post {
+        string title = 1;
+        string content = 2;
+      }
+      """)
+
+      run([
+        "--include-path=#{tmp_dir}",
+        "--output-path=#{tmp_dir}",
+        proto_path
+      ])
+
+      assert File.exists?("#{tmp_dir}/multi_message.pb.ex")
+      refute File.exists?("#{tmp_dir}/foo/user.pb.ex")
+      refute File.exists?("#{tmp_dir}/foo/post.pb.ex")
+
+      mods = compile_file_and_clean_modules_on_exit("#{tmp_dir}/multi_message.pb.ex")
+      assert Enum.sort(mods) == [Foo.Post, Foo.User]
+    end
   end
 
   # Regression test for https://github.com/elixir-protobuf/protobuf/issues/242
