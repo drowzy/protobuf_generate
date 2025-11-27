@@ -372,15 +372,100 @@ defmodule ProtobufGenerate.Plugins.Message do
   defp from_enum(:TYPE_SINT32), do: :sint32
   defp from_enum(:TYPE_SINT64), do: :sint64
 
-  defp get_comments(ctx, _desc) do
+  defp get_comments(ctx, desc) do
     comments =
       Comment.get(ctx)
       |> normalize_indentation()
 
+    comments =
+      if comments != "", do: comments, else: "Automatically generated module for #{desc.name}"
+
     if comments != "" do
-      indent(comments, 2)
+      fields =
+        Enum.with_index(desc.field, fn field, index ->
+          ctx = Context.append_comment_path(ctx, "2.#{index}")
+          {field.name, field_comment(ctx, field)}
+        end)
+        |> Enum.sort_by(fn {name, _comment} -> name end)
+        |> Enum.map(fn {_name, comment} -> comment end)
+
+      field_rows =
+        Enum.map(fields, fn {row, _additional} -> row end)
+        |> Enum.join("\n")
+
+      additional_notes =
+        Enum.reject(fields, fn {_row, additional} -> is_nil(additional) end)
+        |> Enum.map(fn {_row, additional} -> additional end)
+        |> Enum.join("\n")
+
+      moduledoc =
+        cond do
+          field_rows == "" ->
+            comments
+
+          additional_notes == "" ->
+            """
+            #{comments}
+
+            ## Fields
+
+            | # | Name | Type | Notes |
+            |---|------|------|-------|
+            #{field_rows}
+            """
+
+          :else ->
+            """
+            #{comments}
+
+            ## Fields
+
+            | # | Name | Type | Notes |
+            |---|------|------|-------|
+            #{field_rows}
+
+            ### Additional Notes
+
+            #{additional_notes}
+            """
+        end
+
+      indent(moduledoc, 2)
     else
       ""
+    end
+  end
+
+  defp field_comment(ctx, field) do
+    type =
+      case from_enum(field.type) do
+        type when type in [:enum, :message] and not is_nil(field.type_name) ->
+          Util.type_from_type_name(ctx, field.type_name)
+
+        type ->
+          type
+      end
+
+    comments =
+      Comment.get(ctx)
+      |> String.trim_trailing("\n")
+
+    case String.split(comments, "\n") do
+      [] ->
+        row = "| #{field.number} | **`#{field.name}`** | `#{type}` | |"
+        {row, nil}
+
+      [one_line] ->
+        row = "| #{field.number} | **`#{field.name}`** | `#{type}` | #{one_line} |"
+        {row, nil}
+
+      [first_line | rest] ->
+        row = "| #{field.number} | **`#{field.name}`** | `#{type}` | #{first_line} |"
+
+        additional =
+          "  * `#{field.name}` (`#{type}`): #{first_line}\n" <> indent(Enum.join(rest, "\n"), 4)
+
+        {row, additional}
     end
   end
 
@@ -408,6 +493,9 @@ defmodule ProtobufGenerate.Plugins.Message do
   defp indent(comments, count) do
     comments
     |> String.split("\n")
-    |> Enum.map_join("\n", fn line -> String.duplicate(" ", count) <> line end)
+    |> Enum.map_join("\n", fn
+      "" -> ""
+      line -> String.duplicate(" ", count) <> line
+    end)
   end
 end

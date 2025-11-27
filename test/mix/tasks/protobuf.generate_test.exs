@@ -104,7 +104,7 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
                compile_file_and_clean_modules_on_exit("#{tmp_dir}/lowercase_enum.pb.ex")
     end
 
-    test "does not produce moduledoc", %{tmp_dir: tmp_dir, proto_path: proto_path} do
+    test "produces a moduledoc with generic message", %{tmp_dir: tmp_dir, proto_path: proto_path} do
       run([
         "--include-docs",
         "--include-path=#{tmp_dir}",
@@ -113,7 +113,20 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
       ])
 
       file = File.read!("#{tmp_dir}/user.pb.ex")
-      assert file =~ "defmodule Foo.User do\n  @moduledoc false\n  use Protobuf"
+
+      assert file =~ """
+             defmodule Foo.User do
+               @moduledoc \"\"\"
+               Automatically generated module for User
+
+               ## Fields
+
+               | # | Name | Type | Notes |
+               |---|------|------|-------|
+               | 1 | **`email`** | `string` |  |
+
+               \"\"\"
+             """
     end
 
     test "one_file_per_module option generates separate files", %{tmp_dir: tmp_dir} do
@@ -355,9 +368,15 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
 
         // Multi-line field comment
         //
-        // With a second line that continues onto
+        // With a second line that _continues_ onto
         // a third.
         bool active = 2;
+
+        SubMessage created_at = 3;
+      }
+
+      message SubMessage {
+        int32 data = 1;
       }
       """)
 
@@ -383,6 +402,22 @@ defmodule Mix.Tasks.Protobuf.GenerateTest do
                third line.
 
                  This line has `indentation` and *styling*.
+
+               ## Fields
+
+               | # | Name | Type | Notes |
+               |---|------|------|-------|
+               | 2 | **`active`** | `bool` | Multi-line field comment |
+               | 3 | **`created_at`** | `Foo.SubMessage` |  |
+               | 1 | **`email`** | `string` | Single-line field comment |
+
+               ### Additional Notes
+
+                 * `active` (`bool`): Multi-line field comment
+
+                    With a second line that _continues_ onto
+                    a third.
+
                \"\"\"
              """
     end
