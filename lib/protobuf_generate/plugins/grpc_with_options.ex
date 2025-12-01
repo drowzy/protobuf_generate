@@ -76,6 +76,10 @@ defmodule ProtobufGenerate.Plugins.GRPCWithOptions do
   defp service_arg(type, _streaming? = true), do: "stream(#{type})"
   defp service_arg(type, _streaming?), do: type
 
+  defp opts(nil) do
+    %{}
+  end
+
   defp opts(%Google.Protobuf.MethodOptions{__pb_extensions__: extensions})
        when extensions == %{} do
     %{}
