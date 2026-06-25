@@ -92,15 +92,19 @@ defmodule ProtobufGenerate.Plugins.Message do
   end
 
   defp gen_nested_msgs(ctx, desc) do
-    Enum.map(desc.nested_type, fn msg_desc -> generate(ctx, msg_desc) end)
+    Enum.with_index(desc.nested_type, fn msg_desc, index ->
+      ctx = Context.append_comment_path(ctx, "3.#{index}")
+      generate(ctx, msg_desc)
+    end)
   end
 
   defp gen_nested_enums(ctx, desc) do
     plugin = ProtobufGenerate.Plugins.Enum
 
-    for enum_desc <- desc.enum_type do
+    Enum.with_index(desc.enum_type, fn enum_desc, index ->
+      ctx = Context.append_comment_path(ctx, "4.#{index}")
       {plugin, plugin.generate(ctx, enum_desc)}
-    end
+    end)
   end
 
   defp gen_fields(syntax, fields) do
@@ -373,67 +377,67 @@ defmodule ProtobufGenerate.Plugins.Message do
   defp from_enum(:TYPE_SINT64), do: :sint64
 
   defp get_comments(ctx, desc) do
-    comments =
+    message_comments =
       Comment.get(ctx)
       |> normalize_indentation()
 
-    comments =
-      if comments != "", do: comments, else: "Automatically generated module for #{desc.name}"
+    message_comments =
+      if message_comments == "" do
+        "Automatically generated module for #{desc.name}"
+      else
+        message_comments
+      end
 
-    if comments != "" do
-      fields =
-        Enum.with_index(desc.field, fn field, index ->
-          ctx = Context.append_comment_path(ctx, "2.#{index}")
-          {field.name, field_comment(ctx, field)}
-        end)
-        |> Enum.sort_by(fn {name, _comment} -> name end)
-        |> Enum.map(fn {_name, comment} -> comment end)
+    fields =
+      Enum.with_index(desc.field, fn field, index ->
+        ctx = Context.append_comment_path(ctx, "2.#{index}")
+        {field.name, field_comment(ctx, field)}
+      end)
+      |> Enum.sort_by(fn {name, _comment} -> name end)
+      |> Enum.map(fn {_name, comment} -> comment end)
 
-      field_rows =
-        Enum.map(fields, fn {row, _additional} -> row end)
-        |> Enum.join("\n")
+    field_rows =
+      Enum.map(fields, fn {row, _additional} -> row end)
+      |> Enum.join("\n")
 
-      additional_notes =
-        Enum.reject(fields, fn {_row, additional} -> is_nil(additional) end)
-        |> Enum.map(fn {_row, additional} -> additional end)
-        |> Enum.join("\n")
+    additional_notes =
+      Enum.reject(fields, fn {_row, additional} -> is_nil(additional) end)
+      |> Enum.map(fn {_row, additional} -> additional end)
+      |> Enum.join("\n")
 
-      moduledoc =
-        cond do
-          field_rows == "" ->
-            comments
+    moduledoc =
+      cond do
+        field_rows == "" ->
+          message_comments
 
-          additional_notes == "" ->
-            """
-            #{comments}
+        additional_notes == "" ->
+          """
+          #{message_comments}
 
-            ## Fields
+          ## Fields
 
-            | # | Name | Type | Notes |
-            |---|------|------|-------|
-            #{field_rows}
-            """
+          | # | Name | Type | Notes |
+          |---|------|------|-------|
+          #{field_rows}
+          """
 
-          :else ->
-            """
-            #{comments}
+        :else ->
+          """
+          #{message_comments}
 
-            ## Fields
+          ## Fields
 
-            | # | Name | Type | Notes |
-            |---|------|------|-------|
-            #{field_rows}
+          | # | Name | Type | Notes |
+          |---|------|------|-------|
+          #{field_rows}
 
-            ### Additional Notes
+          ### Additional Notes
 
-            #{additional_notes}
-            """
-        end
+          #{additional_notes}
+          """
+      end
 
-      indent(moduledoc, 2)
-    else
-      ""
-    end
+    indent(moduledoc, 2)
   end
 
   defp field_comment(ctx, field) do
