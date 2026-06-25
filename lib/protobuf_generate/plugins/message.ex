@@ -92,15 +92,19 @@ defmodule ProtobufGenerate.Plugins.Message do
   end
 
   defp gen_nested_msgs(ctx, desc) do
-    Enum.map(desc.nested_type, fn msg_desc -> generate(ctx, msg_desc) end)
+    Enum.with_index(desc.nested_type, fn msg_desc, index ->
+      ctx = Context.append_comment_path(ctx, "3.#{index}")
+      generate(ctx, msg_desc)
+    end)
   end
 
   defp gen_nested_enums(ctx, desc) do
     plugin = ProtobufGenerate.Plugins.Enum
 
-    for enum_desc <- desc.enum_type do
+    Enum.with_index(desc.enum_type, fn enum_desc, index ->
+      ctx = Context.append_comment_path(ctx, "4.#{index}")
       {plugin, plugin.generate(ctx, enum_desc)}
-    end
+    end)
   end
 
   defp gen_fields(syntax, fields) do
